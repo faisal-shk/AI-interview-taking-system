@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Interview Report - Interview Platform{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <h1 class="fw-bold">Interview Report</h1>
+        <p class="lead">Review your interview performance and feedback.</p>
+    </div>
+    <div class="col-md-4 text-md-end">
+        <div class="btn-group">
+            <a href="{{ url_for('report_bp.download_csv', session_id=interview_session.id) }}" class="btn btn-outline-primary">
+                <i class="bi bi-file-earmark-spreadsheet"></i> Export CSV
+            </a>
+            <a href="{{ url_for('report_bp.download_pdf', session_id=interview_session.id) }}" class="btn btn-outline-primary">
+                <i class="bi bi-file-earmark-pdf"></i> Download PDF
+            </a>
+            <a href="{{ url_for('report_bp.reports') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Reports
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Profile Summary -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Profile Summary</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <h6 class="text-muted">Profile Type</h6>
+                <p class="mb-3 fw-bold">{{ profile.profile_type }}</p>
+                
+                <h6 class="text-muted">Experience Level</h6>
+                <p class="mb-3 fw-bold">{{ profile.experience_level }}</p>
+            </div>
+            <div class="col-md-4">
+                <h6 class="text-muted">Target Industry</h6>
+                <p class="mb-3 fw-bold">{{ profile.target_industry }}</p>
+                
+                <h6 class="text-muted">Interview Mode</h6>
+                <p class="mb-3 fw-bold">{{ interview_session.mode|capitalize }}</p>
+            </div>
+            <div class="col-md-4">
+                <h6 class="text-muted">Date Completed</h6>
+                <p class="mb-3 fw-bold">{{ interview_session.completed_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                
+                <h6 class="text-muted">Overall Score</h6>
+                <div class="d-flex align-items-center">
+                    <span class="display-6 me-2 fw-bold {{ 'text-success' if interview_session.overall_score >= 70 else 'text-warning' if interview_session.overall_score >= 50 else 'text-danger' }}">
+                        {{ interview_session.overall_score }}
+                    </span>
+                    <div class="progress flex-grow-1" style="height: 10px;">
+                        <div class="progress-bar bg-{{ 'success' if interview_session.overall_score >= 70 else 'warning' if interview_session.overall_score >= 50 else 'danger' }}" 
+                             role="progressbar" style="width: {{ interview_session.overall_score }}%;" 
+                             aria-valuenow="{{ interview_session.overall_score }}" aria-valuemin="0" aria-valuemax="100">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <h6 class="text-muted">Skills</h6>
+            <div>
+                {% for skill in profile.skills.split(',') %}
+                <span class="badge bg-primary me-1 mb-1">{{ skill }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Key Improvement Areas -->
+<div class="card shadow mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0">Key Improvement Areas</h5>
+    </div>
+    <div class="card-body">
+        {% if improvement_tips %}
+        <ul class="list-group list-group-flush">
+            {% for tip in improvement_tips %}
+            <li class="list-group-item">{{ tip }}</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-center text-muted my-3">No specific improvement areas identified.</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Question & Answer Details -->
+<h3 class="mt-5 mb-4">Question & Answer Details</h3>
+
+{% for qa in qa_list %}
+<div class="card shadow mb-4">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Question {{ qa.question_index }}</h5>
+        <span class="badge bg-{{ 'success' if qa.score >= 70 else 'warning' if qa.score >= 50 else 'danger' }}">
+            Score: {{ qa.score }}
+        </span>
+    </div>
+    <div class="card-body">
+        <div class="mb-4">
+            <h6 class="fw-bold">Question:</h6>
+            <p>{{ qa.question }}</p>
+        </div>
+        
+        <div class="mb-4">
+            <h6 class="fw-bold">Your Answer:</h6>
+            <div class="border p-3 bg-light rounded">
+                {{ qa.answer }}
+            </div>
+        </div>
+        
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <h6 class="fw-bold text-success">Strengths:</h6>
+                {% if qa.strengths %}
+                <ul class="list-group list-group-flush">
+                    {% for strength in qa.strengths %}
+                    <li class="list-group-item bg-transparent ps-0">
+                        <i class="bi bi-check-circle-fill text-success me-2"></i>
+                        {{ strength }}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted">No specific strengths identified.</p>
+                {% endif %}
+            </div>
+            
+            <div class="col-md-6">
+                <h6 class="fw-bold text-danger">Weaknesses:</h6>
+                {% if qa.weaknesses %}
+                <ul class="list-group list-group-flush">
+                    {% for weakness in qa.weaknesses %}
+                    <li class="list-group-item bg-transparent ps-0">
+                        <i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>
+                        {{ weakness }}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted">No specific weaknesses identified.</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="mt-3">
+            <h6 class="fw-bold">Feedback:</h6>
+            <div class="card-text">{{ qa.feedback }}</div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+{% endblock %} 

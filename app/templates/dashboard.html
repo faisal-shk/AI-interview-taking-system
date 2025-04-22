@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Interview Platform{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-6 fw-bold">Candidate Dashboard</h1>
+        <p class="lead">Welcome to your interview practice dashboard.</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-primary bg-gradient text-white">
+                <h5 class="mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-3">
+                    <a href="{{ url_for('dashboard_bp.profile') }}" class="btn btn-outline-primary">Create New Profile</a>
+                    <a href="{{ url_for('dashboard_bp.start_interview') }}" class="btn btn-primary">Start New Interview</a>
+                    <a href="{{ url_for('report_bp.reports') }}" class="btn btn-outline-secondary">View Past Reports</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6 mb-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-success bg-gradient text-white">
+                <h5 class="mb-0">Your Profiles</h5>
+            </div>
+            <div class="card-body">
+                {% if profiles %}
+                <div class="list-group">
+                    {% for profile in profiles %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h6 class="mb-1">{{ profile.profile_type }}</h6>
+                            <small>{{ profile.experience_level }}</small>
+                        </div>
+                        <p class="mb-1 text-muted">{{ profile.skills }}</p>
+                        <small>Industry: {{ profile.target_industry }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p>You haven't created any profiles yet.</p>
+                    <a href="{{ url_for('dashboard_bp.profile') }}" class="btn btn-primary">Create Profile</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-info bg-gradient text-white">
+                <h5 class="mb-0">Recent Interview Sessions</h5>
+            </div>
+            <div class="card-body">
+                {% if interview_sessions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Profile</th>
+                                <th>Mode</th>
+                                <th>Questions</th>
+                                <th>Status</th>
+                                <th>Score</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in interview_sessions %}
+                            <tr>
+                                <td>{{ session.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ session.profile.profile_type }}</td>
+                                <td>{{ session.mode|capitalize }}</td>
+                                <td>{{ session.current_question_index - 1 }}/{{ session.total_questions }}</td>
+                                <td>
+                                    {% if session.completed_at %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark">In Progress</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ session.overall_score|default('N/A') }}</td>
+                                <td>
+                                    {% if session.completed_at %}
+                                    <a href="{{ url_for('report_bp.view_report', session_id=session.id) }}" class="btn btn-sm btn-outline-primary">View Report</a>
+                                    {% else %}
+                                    <a href="{{ url_for('interview_bp.question', session_id=session.id) }}" class="btn btn-sm btn-outline-primary">Continue</a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p>You haven't started any interviews yet.</p>
+                    <a href="{{ url_for('dashboard_bp.start_interview') }}" class="btn btn-primary">Start Interview</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

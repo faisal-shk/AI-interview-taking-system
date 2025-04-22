@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Interview Results{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">Interview Results</h4>
+                    <div>
+                        <a href="{{ url_for('interview_bp.download_report', session_id=interview_session.id, format='csv') }}" class="btn btn-sm btn-outline-primary me-2">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> Download CSV
+                        </a>
+                        <a href="{{ url_for('interview_bp.download_report', session_id=interview_session.id, format='pdf') }}" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-file-earmark-pdf"></i> Download PDF
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h5>Session Details</h5>
+                        <p><strong>Job Title:</strong> {{ interview_session.job_title }}</p>
+                        <p><strong>Mode:</strong> {{ interview_session.mode|title }}</p>
+                        <p><strong>Completed:</strong> {{ interview_session.completed_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                    </div>
+                    
+                    <!-- Overall Score -->
+                    <div class="mb-4">
+                        <h5>Overall Performance</h5>
+                        <div class="progress" style="height: 30px;">
+                            <div class="progress-bar 
+                                {% if overall_score >= 80 %}bg-success
+                                {% elif overall_score >= 60 %}bg-info
+                                {% elif overall_score >= 40 %}bg-warning
+                                {% else %}bg-danger{% endif %}" 
+                                role="progressbar" 
+                                style="width: {{ overall_score }}%;" 
+                                aria-valuenow="{{ overall_score }}" 
+                                aria-valuemin="0" 
+                                aria-valuemax="100">
+                                {{ overall_score }}%
+                            </div>
+                        </div>
+                        <div class="mt-2 text-center">
+                            {% if overall_score >= 80 %}
+                            <span class="badge bg-success">Excellent</span>
+                            {% elif overall_score >= 70 %}
+                            <span class="badge bg-info">Good</span>
+                            {% elif overall_score >= 60 %}
+                            <span class="badge bg-primary">Satisfactory</span>
+                            {% else %}
+                            <span class="badge bg-danger">Needs Improvement</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <h5>Questions and Answers</h5>
+                        {% for question in questions %}
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h6 class="card-title">Question {{ loop.index }}</h6>
+                                <p class="card-text">{{ question.question_text }}</p>
+                                <p class="text-muted">Type: {{ question.question_type }}</p>
+                                
+                                {% if question.answer %}
+                                <div class="mt-3">
+                                    <h6>Your Answer:</h6>
+                                    <p>{{ question.answer.transcript }}</p>
+                                    
+                                    {% if question.answer.score > 0 %}
+                                    <div class="mt-3">
+                                        <h6>AI Evaluation:</h6>
+                                        <div class="progress mb-2">
+                                            <div class="progress-bar 
+                                                {% if question.answer.score >= 80 %}bg-success
+                                                {% elif question.answer.score >= 60 %}bg-info
+                                                {% elif question.answer.score >= 40 %}bg-warning
+                                                {% else %}bg-danger{% endif %}" 
+                                                role="progressbar" 
+                                                style="width: {{ question.answer.score }}%;" 
+                                                aria-valuenow="{{ question.answer.score }}" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="100">
+                                                {{ question.answer.score }}%
+                                            </div>
+                                        </div>
+                                        
+                                        {% if question.answer.strengths %}
+                                        <div class="mb-2">
+                                            <strong class="text-success">Strengths:</strong>
+                                            <p class="mb-0">{{ question.answer.strengths|nl2br }}</p>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if question.answer.weaknesses %}
+                                        <div class="mb-2">
+                                            <strong class="text-danger">Areas for Improvement:</strong>
+                                            <p class="mb-0">{{ question.answer.weaknesses|nl2br }}</p>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if question.answer.feedback %}
+                                        <div class="mb-2">
+                                            <strong class="text-primary">Feedback:</strong>
+                                            <p class="mb-0">{{ question.answer.feedback|nl2br }}</p>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <small class="text-muted d-block mt-2">
+                                        Answered at: {{ question.answered_at.strftime('%Y-%m-%d %H:%M:%S') }}
+                                    </small>
+                                </div>
+                                {% else %}
+                                <p class="text-muted">No answer provided</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="{{ url_for('dashboard_bp.dashboard') }}" class="btn btn-primary">
+                            Return to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

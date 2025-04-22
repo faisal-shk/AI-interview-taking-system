@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Interview Question{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Welcome Message Modal -->
+            <div class="modal fade" id="welcomeModal" tabindex="-1" aria-labelledby="welcomeModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="welcomeModalLabel">Welcome to Your Interview</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Welcome to your interview session! I'll be asking you questions related to the job position.</p>
+                            <p>You can either type your answers or use the microphone button to speak your response.</p>
+                            <p>When you're ready, click "Start Interview" to begin.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Start Interview</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Question {{ question_number }} of {{ total_questions }}</h4>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <h5 class="card-title" id="question-text">{{ question.question_text }}</h5>
+                        <p class="text-muted">Type: {{ question.question_type }}</p>
+                        <button type="button" class="btn btn-sm btn-info" id="speak-question">
+                            <i class="fas fa-volume-up"></i> Read Question Aloud
+                        </button>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('interview_bp.submit_answer', session_id=interview_session.id) }}">
+                        <div class="form-group">
+                            <label for="answer">Your Answer</label>
+                            <div class="input-group">
+                                <textarea class="form-control" id="answer" name="answer" rows="5" required></textarea>
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-secondary" id="mic-button">
+                                        <i class="fas fa-microphone"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <span id="recording-status" class="text-muted"></span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                {% if question_number == total_questions %}
+                                    Submit Final Answer
+                                {% else %}
+                                    Submit Answer & Continue
+                                {% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add FontAwesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+<!-- Add JavaScript for speech features -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show welcome modal only on first page load
+        const welcomeModalShown = localStorage.getItem('welcomeModalShown');
+        if (!welcomeModalShown) {
+            const welcomeModal = new bootstrap.Modal(document.getElementById('welcomeModal'));
+            welcomeModal.show();
+            localStorage.setItem('welcomeModalShown', 'true');
+        }
+        
+        // Speech synthesis setup
+        const speakButton = document.getElementById('speak-question');
+        const questionText = document.getElementById('question-text').textContent;
+        
+        // Check if speech synthesis is supported
+        if ('speechSynthesis' in window) {
+            speakButton.addEventListener('click', function() {
+                // Cancel any ongoing speech
+                window.speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(questionText);
+                
+                // Get available voices and select a good one
+                let voices = window.speechSynthesis.getVoices();
+                if (voices.length === 0) {
+                    // Voices might not be loaded yet, wait for them
+                    window.speechSynthesis.onvoiceschanged = function() {
+                        voices = window.speechSynthesis.getVoices();
+                        setVoice();
+                    };
+                } else {
+                    setVoice();
+                }
+                
+                function setVoice() {
+                    // Try to find a good English voice
+                    const preferredVoice = voices.find(voice => 
+                        voice.lang.includes('en') && 
+                        (voice.name.includes('Google') || voice.name.includes('Microsoft') || voice.name.includes('Alex'))
+                    );
+                    
+                    if (preferredVoice) {
+                        utterance.voice = preferredVoice;
+                    }
+                }
+                
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+                
+                // Handle both the start and end of speech
+                utterance.onstart = function() {
+                    speakButton.disabled = true;
+                    speakButton.innerHTML = '<i class="fas fa-volume-up fa-spin"></i> Reading...';
+                };
+                
+                utterance.onend = function() {
+                    speakButton.disabled = false;
+                    speakButton.innerHTML = '<i class="fas fa-volume-up"></i> Read Question Aloud';
+                };
+                
+                window.speechSynthesis.speak(utterance);
+            });
+        } else {
+            // Speech synthesis not supported
+            speakButton.disabled = true;
+            speakButton.title = 'Speech synthesis not supported in this browser';
+        }
+        
+        // Speech recognition setup
+        const micButton = document.getElementById('mic-button');
+        const answerTextarea = document.getElementById('answer');
+        const recordingStatus = document.getElementById('recording-status');
+        let recognition;
+        let isRecording = false;
+        
+        // Check if browser supports speech recognition
+        if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';  // Set language to English
+            
+            recognition.onstart = function() {
+                isRecording = true;
+                recordingStatus.textContent = 'Recording... Speak now';
+                recordingStatus.classList.add('text-danger');
+                micButton.classList.add('btn-danger');
+                micButton.querySelector('i').classList.remove('fa-microphone');
+                micButton.querySelector('i').classList.add('fa-stop');
+            };
+            
+            recognition.onresult = function(event) {
+                let interimTranscript = '';
+                let finalTranscript = '';
+                
+                // Get existing text
+                finalTranscript = answerTextarea.value || '';
+                
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += ' ' + transcript;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                
+                // Trim extra spaces
+                finalTranscript = finalTranscript.trim();
+                
+                // Update textarea with final + interim results
+                answerTextarea.value = finalTranscript + (interimTranscript ? ' ' + interimTranscript : '');
+            };
+            
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error', event.error);
+                recordingStatus.textContent = 'Error: ' + event.error;
+                stopRecording();
+            };
+            
+            recognition.onend = function() {
+                stopRecording();
+            };
+            
+            micButton.addEventListener('click', function() {
+                if (!isRecording) {
+                    recognition.start();
+                } else {
+                    recognition.stop();
+                }
+            });
+            
+            function stopRecording() {
+                isRecording = false;
+                recordingStatus.textContent = '';
+                recordingStatus.classList.remove('text-danger');
+                micButton.classList.remove('btn-danger');
+                micButton.querySelector('i').classList.remove('fa-stop');
+                micButton.querySelector('i').classList.add('fa-microphone');
+            }
+        } else {
+            // Speech recognition not supported
+            micButton.disabled = true;
+            micButton.title = 'Speech recognition not supported in this browser';
+        }
+    });
+</script>
+{% endblock %} 

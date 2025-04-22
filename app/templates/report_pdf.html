@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 2cm;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #2c3e50;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 20px;
+        }
+        .profile-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .qa-section {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+        .question {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        .answer {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+        .score {
+            font-weight: bold;
+            color: #27ae60;
+        }
+        .strengths {
+            color: #27ae60;
+        }
+        .weaknesses {
+            color: #e74c3c;
+        }
+        .feedback {
+            font-style: italic;
+            margin-top: 10px;
+        }
+        .improvement-tips {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        @page {
+            margin: 2cm;
+        }
+    </style>
+</head>
+<body>
+    <h1>Interview Report</h1>
+    
+    <div class="profile-info">
+        <h2>Profile Summary</h2>
+        <p><strong>Profile Type:</strong> {{ profile.profile_type }}</p>
+        <p><strong>Experience Level:</strong> {{ profile.experience_level }}</p>
+        <p><strong>Target Industry:</strong> {{ profile.target_industry }}</p>
+        <p><strong>Skills:</strong> {{ profile.skills }}</p>
+        <p><strong>Interview Mode:</strong> {{ interview_session.mode|capitalize }}</p>
+        <p><strong>Date Completed:</strong> {{ interview_session.completed_at.strftime('%Y-%m-%d %H:%M') }}</p>
+        <p><strong>Overall Score:</strong> <span class="score">{{ interview_session.overall_score }}%</span></p>
+    </div>
+
+    {% if improvement_tips %}
+    <div class="improvement-tips">
+        <h2>Key Improvement Areas</h2>
+        <ul>
+            {% for tip in improvement_tips %}
+            <li>{{ tip }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <h2>Question & Answer Details</h2>
+    {% for qa in qa_list %}
+    <div class="qa-section">
+        <p class="question">Question {{ qa.question_index }}: {{ qa.question }}</p>
+        <div class="answer">
+            <p><strong>Your Answer:</strong> {{ qa.answer }}</p>
+            <p><strong>Score:</strong> <span class="score">{{ qa.score }}%</span></p>
+            
+            {% if qa.strengths %}
+            <p class="strengths"><strong>Strengths:</strong></p>
+            <ul>
+                {% for strength in qa.strengths %}
+                <li>{{ strength }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            
+            {% if qa.weaknesses %}
+            <p class="weaknesses"><strong>Weaknesses:</strong></p>
+            <ul>
+                {% for weakness in qa.weaknesses %}
+                <li>{{ weakness }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            
+            <p class="feedback"><strong>Feedback:</strong> {{ qa.feedback }}</p>
+        </div>
+    </div>
+    {% endfor %}
+</body>
+</html> 

@@ -1,0 +1,308 @@
+{% extends 'base.html' %}
+
+{% block title %}Interview Question - Interview Platform{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="fw-bold h2">Interview Question</h1>
+        <div class="progress mb-3" style="height: 10px;">
+            <div class="progress-bar" role="progressbar" style="width: {{ (question_number / total_questions) * 100 }}%;" 
+                 aria-valuenow="{{ question_number }}" aria-valuemin="0" aria-valuemax="{{ total_questions }}">
+            </div>
+        </div>
+        <p class="text-muted">Question {{ question_number }} of {{ total_questions }}</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <!-- Welcome Message Modal - Only show on first question -->
+        {% if question_number == 1 %}
+        <div class="modal fade" id="welcomeModal" tabindex="-1" aria-labelledby="welcomeModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="welcomeModalLabel">Welcome to Your Interview</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Welcome to your interview session! I'll be asking you questions related to the job position.</p>
+                        <p>You can either type your answers or use the microphone button to speak your response.</p>
+                        <p>When you're ready, click "Start Interview" to begin.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Start Interview</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">{{ question.question_text }}</h5>
+                <button type="button" id="read-question" class="btn btn-light btn-sm">
+                    <i class="bi bi-volume-up"></i> Read Question
+                </button>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('interview_bp.submit_answer', session_id=interview_session.id) }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <div class="d-flex mb-3">
+                            <button type="button" id="start-recording" class="btn btn-primary me-2">
+                                <i class="bi bi-mic-fill"></i> Start Speaking
+                            </button>
+                            <button type="button" id="stop-recording" class="btn btn-danger me-2" disabled>
+                                <i class="bi bi-stop-fill"></i> Stop
+                            </button>
+                            <div class="ms-auto">
+                                <label for="audio-file" class="btn btn-outline-secondary">
+                                    <i class="bi bi-upload"></i> Upload Audio
+                                </label>
+                                <input type="file" id="audio-file" name="audio_file" class="d-none" accept="audio/*">
+                            </div>
+                        </div>
+                        
+                        <div id="status-indicator" class="alert alert-secondary mb-3 d-none">
+                            <div class="d-flex align-items-center">
+                                <div class="spinner-grow spinner-grow-sm text-primary me-2" role="status" id="recording-indicator"></div>
+                                <span id="status-text">Listening...</span>
+                            </div>
+                        </div>
+                        
+                        <label for="transcript" class="form-label">Your Answer</label>
+                        <div class="position-relative">
+                            <textarea class="form-control" id="transcript" name="transcript" rows="8" 
+                                      placeholder="Your answer will appear here as you speak. You can also edit or type your answer directly."
+                                      style="min-height: 200px;"></textarea>
+                            <div id="transcript-indicator" class="position-absolute top-0 end-0 p-2 d-none">
+                                <span class="badge bg-primary">Live Transcription</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" id="submit-answer" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Submit Answer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="alert alert-info">
+            <h6 class="alert-heading fw-bold">Tips</h6>
+            <ul class="mb-0">
+                <li>Click "Read Question" to hear the question read aloud.</li>
+                <li>Click "Start Speaking" and answer the question naturally.</li>
+                <li>Your response will be transcribed in real-time.</li>
+                <li>You can edit the text before submitting if needed.</li>
+                <li>If the speech recognition isn't working, you can type your answer or upload an audio file.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<style>
+    #transcript {
+        transition: all 0.3s ease;
+    }
+    #transcript:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .recording {
+        animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elements
+        const startBtn = document.getElementById('start-recording');
+        const stopBtn = document.getElementById('stop-recording');
+        const readQuestionBtn = document.getElementById('read-question');
+        const statusIndicator = document.getElementById('status-indicator');
+        const statusText = document.getElementById('status-text');
+        const transcript = document.getElementById('transcript');
+        const transcriptIndicator = document.getElementById('transcript-indicator');
+        const audioFileInput = document.getElementById('audio-file');
+        const questionText = document.querySelector('.card-header h5').textContent;
+        
+        // Show welcome modal only for the first question
+        {% if question_number == 1 %}
+        const welcomeModal = new bootstrap.Modal(document.getElementById('welcomeModal'));
+        welcomeModal.show();
+        {% endif %}
+        
+        // Text-to-speech setup
+        let speech = null;
+        
+        // Check if browser supports Web Speech API
+        if ('speechSynthesis' in window) {
+            speech = window.speechSynthesis;
+            
+            readQuestionBtn.addEventListener('click', function() {
+                if (speech.speaking) {
+                    speech.cancel();
+                }
+                
+                const utterance = new SpeechSynthesisUtterance(questionText);
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.volume = 1.0;
+                
+                // Get available voices and select a natural-sounding one
+                const voices = speech.getVoices();
+                const preferredVoices = ['Google US English', 'Microsoft David - English (United States)'];
+                for (const voice of voices) {
+                    if (preferredVoices.includes(voice.name)) {
+                        utterance.voice = voice;
+                        break;
+                    }
+                }
+                
+                speech.speak(utterance);
+            });
+        } else {
+            readQuestionBtn.disabled = true;
+            readQuestionBtn.title = 'Text-to-speech not supported in your browser';
+        }
+        
+        // Speech recognition setup
+        let recognition = null;
+        let isRecording = false;
+        let finalTranscript = '';
+        
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+            
+            recognition.onstart = function() {
+                isRecording = true;
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                statusIndicator.classList.remove('d-none');
+                statusIndicator.classList.remove('alert-danger');
+                statusIndicator.classList.add('alert-info');
+                statusText.textContent = 'Listening...';
+                startBtn.classList.add('recording');
+            };
+            
+            recognition.onresult = function(event) {
+                let interimTranscript = '';
+                
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript + ' ';
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                
+                // Update the textarea with both final and interim results
+                transcript.value = finalTranscript + interimTranscript;
+                
+                // Show transcription indicator
+                transcriptIndicator.classList.remove('d-none');
+                
+                // Auto-scroll to bottom
+                transcript.scrollTop = transcript.scrollHeight;
+            };
+            
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+                statusIndicator.classList.remove('alert-info');
+                statusIndicator.classList.add('alert-danger');
+                statusText.textContent = 'Error: ' + event.error;
+                
+                // Try to restart recognition if it's a temporary error
+                if (event.error === 'no-speech' || event.error === 'audio-capture') {
+                    setTimeout(() => {
+                        if (isRecording) {
+                            try {
+                                recognition.start();
+                            } catch (e) {
+                                console.error('Failed to restart recognition:', e);
+                            }
+                        }
+                    }, 1000);
+                }
+            };
+            
+            recognition.onend = function() {
+                isRecording = false;
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                startBtn.classList.remove('recording');
+                
+                if (!statusIndicator.classList.contains('alert-danger')) {
+                    statusIndicator.classList.add('d-none');
+                }
+                
+                // Hide transcription indicator after a delay
+                setTimeout(() => {
+                    transcriptIndicator.classList.add('d-none');
+                }, 2000);
+            };
+        } else {
+            // Browser doesn't support speech recognition
+            startBtn.disabled = true;
+            statusIndicator.classList.remove('d-none');
+            statusIndicator.classList.add('alert-danger');
+            statusText.textContent = 'Your browser does not support speech recognition. Please type your answer or upload an audio file.';
+        }
+        
+        // Event listeners
+        startBtn.addEventListener('click', function() {
+            if (recognition) {
+                try {
+                    finalTranscript = transcript.value || '';
+                    recognition.start();
+                } catch (e) {
+                    console.error('Recognition already started:', e);
+                }
+            }
+        });
+        
+        stopBtn.addEventListener('click', function() {
+            if (recognition && isRecording) {
+                recognition.stop();
+            }
+        });
+        
+        // Display file name when audio file is selected
+        audioFileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                const fileName = this.files[0].name;
+                statusIndicator.classList.remove('d-none');
+                statusIndicator.classList.remove('alert-danger');
+                statusIndicator.classList.add('alert-info');
+                statusText.textContent = 'Selected file: ' + fileName;
+            }
+        });
+        
+        // Validate form submission
+        document.querySelector('form').addEventListener('submit', function(e) {
+            if (transcript.value.trim().length < 10 && !audioFileInput.files.length) {
+                e.preventDefault();
+                alert('Please provide a more detailed answer or upload an audio file.');
+            }
+        });
+    });
+</script>
+{% endblock %} 

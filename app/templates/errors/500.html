@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-body text-center">
+                    <h1 class="display-1 text-danger">500</h1>
+                    <h2 class="mb-4">Server Error</h2>
+                    <p class="lead">Something went wrong on our end. We're working to fix it.</p>
+                    <p>Please try again in a few moments or contact support if the problem persists.</p>
+                    <div class="mt-4">
+                        <a href="{{ url_for('dashboard_bp.dashboard') }}" class="btn btn-primary me-2">
+                            <i class="bi bi-house-fill"></i> Go to Dashboard
+                        </a>
+                        <a href="{{ url_for('auth_bp.index') }}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Return to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

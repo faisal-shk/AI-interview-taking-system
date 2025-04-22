@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Start Interview - Interview Platform{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="fw-bold">Start Interview</h1>
+        <p class="lead">Set up your interview session to begin practicing.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Interview Setup</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('dashboard_bp.start_interview') }}">
+                    <div class="mb-4">
+                        <label for="profile_id" class="form-label">Select Profile</label>
+                        <select class="form-select" id="profile_id" name="profile_id" required>
+                            <option value="" selected disabled>Choose a profile for this interview</option>
+                            {% for profile in profiles %}
+                            <option value="{{ profile.id }}">{{ profile.profile_type }} - {{ profile.experience_level }} ({{ profile.target_industry }})</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">The interview questions will be tailored to your selected profile.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="job_title" class="form-label">Job Title</label>
+                        <input type="text" class="form-control" id="job_title" name="job_title" required>
+                        <div class="form-text">Enter the title of the position you're interviewing for.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="job_description" class="form-label">Job Description</label>
+                        <textarea class="form-control" id="job_description" name="job_description" rows="4" required></textarea>
+                        <div class="form-text">Paste the job description here to get more relevant questions.</div>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="mode" class="form-label">Interview Mode</label>
+                        <select class="form-select" id="mode" name="mode" required>
+                            <option value="interactive">Interactive (One question at a time)</option>
+                            <option value="bulk">Bulk (All questions at once)</option>
+                        </select>
+                        <div class="form-text">Choose how you want to receive the questions.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="num_questions" class="form-label">Number of Questions</label>
+                        <input type="number" class="form-control" id="num_questions" name="num_questions" min="1" max="20" value="5" required>
+                        <div class="form-text">Choose between 1 and 20 questions.</div>
+                    </div>
+
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary">Start Interview</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Update displayed value when slider value changes
+    const numQuestionsSlider = document.getElementById('num_questions');
+    const numQuestionsValue = document.getElementById('num_questions_value');
+    
+    numQuestionsSlider.addEventListener('input', function() {
+        numQuestionsValue.textContent = this.value;
+    });
+</script>
+{% endblock %} 

@@ -1,0 +1,107 @@
+/* Main Styles for Interview Platform */
+
+/* General Styles */
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+/* Custom Utility Classes */
+.bg-gradient {
+    background-image: linear-gradient(to right, rgba(0,0,0,0.1), rgba(0,0,0,0));
+}
+
+/* Card Styles */
+.card {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+}
+
+.card-header {
+    border-bottom: 0;
+    padding: 0.75rem 1.25rem;
+}
+
+/* Form Styles */
+.form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Recording Styles */
+#status-indicator.recording {
+    background-color: rgba(255, 0, 0, 0.1);
+    border-color: #dc3545;
+}
+
+#recording-indicator {
+    width: 1rem;
+    height: 1rem;
+}
+
+/* Progress Bars */
+.progress {
+    background-color: #e9ecef;
+    border-radius: 0.25rem;
+    overflow: hidden;
+}
+
+/* Report Page */
+.badge {
+    font-weight: 500;
+    padding: 0.5em 0.75em;
+}
+
+.strengths-list li, .weaknesses-list li {
+    margin-bottom: 0.5rem;
+}
+
+/* Speech Recognition Styling */
+#transcript {
+    min-height: 150px;
+    font-size: 1rem;
+}
+
+/* Animation for recording indicator */
+@keyframes pulse {
+    0% {
+        transform: scale(0.95);
+        opacity: 0.7;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(0.95);
+        opacity: 0.7;
+    }
+}
+
+.recording-pulse {
+    animation: pulse 1.5s infinite;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .btn-group {
+        flex-direction: column;
+        width: 100%;
+    }
+    
+    .btn-group > .btn {
+        border-radius: 0.25rem !important;
+        margin-bottom: 0.5rem;
+    }
+} 

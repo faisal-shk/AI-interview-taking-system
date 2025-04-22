@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Profile - Interview Platform{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="fw-bold">Create Profile</h1>
+        <p class="lead">Set up your professional profile to get tailored interview questions.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Candidate Profile Details</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('dashboard_bp.profile') }}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Full Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ user.name if user else '' }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ user.email if user else '' }}" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone Number (Optional)</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" value="{{ user.phone if user else '' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="profile_type" class="form-label">Profile Type</label>
+                        <select class="form-select" id="profile_type" name="profile_type" required>
+                            <option value="" selected disabled>Select your profile type</option>
+                            {% for type in profile_types %}
+                            <option value="{{ type }}">{{ type }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Skills</label>
+                        <div class="row">
+                            {% for skill in skills_list %}
+                            <div class="col-md-4 mb-2">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" value="{{ skill }}" name="skills" id="skill_{{ loop.index }}">
+                                    <label class="form-check-label" for="skill_{{ loop.index }}">
+                                        {{ skill }}
+                                    </label>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="form-text">Select all skills that apply to your profile.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="experience_level" class="form-label">Experience Level</label>
+                        <select class="form-select" id="experience_level" name="experience_level" required>
+                            <option value="" selected disabled>Select your experience level</option>
+                            {% for level in experience_levels %}
+                            <option value="{{ level }}">{{ level }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="target_industry" class="form-label">Target Industry</label>
+                        <select class="form-select" id="target_industry" name="target_industry" required>
+                            <option value="" selected disabled>Select your target industry</option>
+                            {% for industry in industries %}
+                            <option value="{{ industry }}">{{ industry }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Create Profile</button>
+                        <a href="{{ url_for('dashboard_bp.dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Form validation to ensure at least one skill is selected
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const skillsChecked = document.querySelectorAll('input[name="skills"]:checked');
+        if (skillsChecked.length === 0) {
+            e.preventDefault();
+            alert('Please select at least one skill');
+        }
+    });
+</script>
+{% endblock %} 
