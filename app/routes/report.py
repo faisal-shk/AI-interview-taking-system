@@ -158,12 +158,11 @@ def download_csv(session_id):
     try:
         buf = generate_csv_report(interview_session, questions)
         buf.seek(0)
-        return Response(
-            buf.getvalue(),
-            mimetype='text/csv',
-            headers={
-                'Content-Disposition': f'attachment; filename=interview_report_{session_id}.csv'
-            }
+        return send_file(
+            buf,
+            as_attachment=True,
+            download_name=f'interview_report_{session_id}.csv',
+            mimetype='text/csv'
         )
     except Exception as e:
         current_app.logger.error(f"CSV download error: {e}")
@@ -248,12 +247,11 @@ def download_pdf(session_id):
     try:
         buf = generate_pdf_report(interview_session, questions)
         buf.seek(0)
-        return Response(
-            buf.getvalue(),
-            mimetype='application/pdf',
-            headers={
-                'Content-Disposition': f'attachment; filename=interview_report_{session_id}.pdf'
-            }
+        return send_file(
+            buf,
+            as_attachment=True,
+            download_name=f'interview_report_{session_id}.pdf',
+            mimetype='application/pdf'
         )
     except Exception as e:
         current_app.logger.error(f"PDF download error: {e}")

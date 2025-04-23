@@ -5,6 +5,8 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    font-family: 'Poppins', sans-serif;
+    background-color: #f1f3f5;
 }
 
 main {
@@ -104,4 +106,30 @@ main {
         border-radius: 0.25rem !important;
         margin-bottom: 0.5rem;
     }
+}
+
+/* Hero Section */
+.hero {
+    background: linear-gradient(135deg, #3b8ad8, #6fb1fc);
+    color: #fff;
+}
+.hero .display-4 {
+    font-weight: 700;
+}
+
+/* Button Styles */
+.btn-primary {
+    background: linear-gradient(to right, #3b8ad8, #6fb1fc);
+    border: none;
+    transition: background 0.3s ease;
+}
+.btn-primary:hover {
+    background: linear-gradient(to left, #3b8ad8, #6fb1fc);
+}
+
+/* Footer */
+footer {
+    background-color: #fff;
+    border-top: 1px solid #dee2e6;
+    color: #6c757d;
 } 
